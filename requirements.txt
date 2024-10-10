@@ -1,0 +1,8 @@
+fastapi[standard]
+python-dotenv
+pydantic[email,timezone]
+oracledb
+pytest
+sqlalchemy
+alembic
+passlib[bcrypt] pyjwt
