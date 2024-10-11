@@ -9,12 +9,11 @@ class User(Base):
     __tablename__ = 'users'
 
     user_id = Column(Integer, Identity(start=1), primary_key=True)
-    phone_number = Column(String(100))
     password = Column(String(100))
     name = Column(String(100))
     email = Column(String(100))
-    books_borrowed = Column(Integer)
-    role = Column(Boolean, default=False)
+    books_borrowed = Column(Integer, default=0) 
+    is_admin = Column(Boolean, default=False)
 
     # One-to-Many relationship: a user can borrow many books
     borrows = relationship('Borrow', back_populates='user')

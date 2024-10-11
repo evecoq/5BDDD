@@ -43,16 +43,17 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
-        role: bool = payload.get("role", False)
+        is_admin: bool = payload.get("is_admin", False)
         if email is None:
             raise credentials_exception
-        token_data = TokenData(email=email, role=role)
+        token_data = TokenData(email=email, is_admin=is_admin)
     except JWTError:
         raise credentials_exception
     user = crud.get_user_by_email(db, email=token_data.email)
     if user is None:
         raise credentials_exception
     return user
+
 
 @app.get("/protected-route/")
 def protected_route(current_user: User = Depends(get_current_user)):
@@ -64,7 +65,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     user = crud.authenticate_user(db, email=form_data.username, password=form_data.password)
     if not user:
         raise HTTPException(status_code=401, detail="Incorrect username or password")
-    access_token = create_access_token(data={"sub": user.email, "is_admin": user.role})
+    access_token = create_access_token(data={"sub": user.email, "is_admin": user.is_admin})
     return {"access_token": access_token, "token_type": "bearer"}        
 
 # Endpoint Utilisateur
@@ -124,6 +125,7 @@ def close_borrow(book_id: int, db: Session = Depends(get_db), current_user: sche
 def get_borrows(db: Session = Depends(get_db), current_user: schemas.Utilisateur = Depends(get_current_user)):
     borrows = crud.get_user_borrows(db=db, user_id=current_user.user_id)
     return borrows
+
 
 @app.post("/books/", response_model=schemas.Book)
 def add_book(book: schemas.BookCreate, db: Session = Depends(get_db)):

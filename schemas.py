@@ -2,22 +2,22 @@ from datetime import date
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 
+
 # Schéma pour la gestion des utilisateurs
 class UtilisateurCreate(BaseModel):
     name: str
     email: EmailStr
-    phone_number: Optional[str] = None
     password: str
 
 class Utilisateur(BaseModel):
     user_id: int
     name: str
     email: EmailStr
-    phone_number: str
-    role: bool
+    is_admin: bool
 
     class Config:
         from_attributes = True
+
 
 # Schéma pour les auteurs
 class AuthorBase(BaseModel):
@@ -33,6 +33,7 @@ class Author(AuthorBase):
 
     class Config:
         from_attributes = True  # Indique à Pydantic d'utiliser les objets SQLAlchemy comme source de données
+
 
 # Schéma pour les livres
 class BookBase(BaseModel):
@@ -58,6 +59,7 @@ class BookCreate(BaseModel):
     pages: Optional[int] = None
     publisher: Optional[str] = None
     price: Optional[float] = None
+
 
 # Schéma pour mettre à jour un livre (peut être le même que BookCreate)
 class BookUpdate(BookBase):
@@ -85,6 +87,7 @@ class BorrowClose(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 # Schéma pour afficher les emprunts de l'utilisateur
 class BorrowDetail(BaseModel):

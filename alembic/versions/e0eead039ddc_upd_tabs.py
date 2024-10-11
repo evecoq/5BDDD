@@ -1,8 +1,8 @@
-"""maj1
+"""upd tabs
 
-Revision ID: 2ea1e2809794
+Revision ID: e0eead039ddc
 Revises: b86868921c84
-Create Date: 2024-10-10 23:16:19.346311
+Create Date: 2024-10-11 02:46:54.770474
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '2ea1e2809794'
+revision: str = 'e0eead039ddc'
 down_revision: Union[str, None] = 'b86868921c84'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
