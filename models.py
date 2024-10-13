@@ -28,7 +28,7 @@ class Book(Base):
     __tablename__ = 'books'
 
     
-    id = Column(Integer, primary_key=True, autoincrement=True)  # Primary key
+    id = Column(Integer, Identity(start=1), primary_key=True)# Primary key
     book_id = Column(String(255), nullable=False, unique=True)
     title = Column(String(1000))
     series = Column(String(1000))

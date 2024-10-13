@@ -62,8 +62,6 @@ class Book(BookBase):
         from_attributes = True
 
 
-
-
 #NEW
 # Schéma de base pour les livres
 class BookBase(BaseModel):
@@ -100,7 +98,7 @@ class GenreCreate(GenreBase):
     pass
 
 
-# Schéma de création pour les livres (inclut les auteurs et genres à créer)
+# Schéma de création pour les livres
 class BookCreate(BookBase):
     book_id: str
     authors: List[AuthorCreate]  # Liste des auteurs à ajouter
@@ -116,10 +114,24 @@ class Book(BookBase):
     class Config:
         from_attributes = True
 
+#UPDATE
+class BookUpdate(BaseModel):
+    title: Optional[str] = None
+    series: Optional[str] = None
+    description: Optional[str] = None
+    language: Optional[str] = None
+    isbn: Optional[str] = None
+    book_format: Optional[str] = None
+    edition: Optional[str] = None
+    pages: Optional[int] = None
+    publisher: Optional[str] = None
+    price: Optional[float] = None
+    authors: Optional[List[AuthorCreate]] = None
+    genres: Optional[List[GenreCreate]] = None
 
-
-
-
+    class Config:
+        from_attributes = True
+        
 
 #---------------------------BORROWS--------------------------
 

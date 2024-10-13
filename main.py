@@ -102,8 +102,7 @@ def search(
     }
 
 
-
-#NEW
+#CREATE
 @app.post("/books/", response_model=schemas.Book)
 def create_book(
     book: schemas.BookCreate, 
@@ -114,6 +113,18 @@ def create_book(
         raise HTTPException(status_code=403, detail="Access forbidden: Admins only")
     
     return crud.create_book_with_author_and_genre(db=db, book_data=book)
+
+
+#UPDATE
+@app.put("/books/{book_id}", response_model=schemas.Book)
+def update_book_endpoint(book_id: str, book_data: schemas.BookUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return crud.update_book(db, book_id, book_data, current_user)
+
+
+#DELETE
+@app.delete("/books/{book_id}", response_model=dict)
+def delete_book_endpoint(book_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return crud.delete_book(db, book_id, current_user)
 
 
 #-----------------------------------BORROWS---------------------------------

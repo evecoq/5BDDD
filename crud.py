@@ -68,11 +68,7 @@ def search_books_and_authors(db: Session, name: str = None, title: str = None):
         "authors": authors
     }
 
-
-
-
-
-#NEW
+#CREATE
 def create_book_with_author_and_genre(db: Session, book_data: schemas.BookCreate):
     # Créer le livre avec un book_id manuel, mais ne pas explicitement définir l'id
     db_book = models.Book(
@@ -112,9 +108,93 @@ def create_book_with_author_and_genre(db: Session, book_data: schemas.BookCreate
     return db_book
 
 
+#UPDATE
+def update_book(db: Session, book_id: str, book_data: schemas.BookUpdate, current_user: User):
+    # Ensure the current user is an admin
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    # Find the book by book_id
+    db_book = db.query(models.Book).filter(models.Book.book_id == book_id).first()
+
+    if not db_book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    # Update the book fields if provided in the request
+    if book_data.title:
+        db_book.title = book_data.title
+    if book_data.series:
+        db_book.series = book_data.series
+    if book_data.description:
+        db_book.description = book_data.description
+    if book_data.language:
+        db_book.language = book_data.language
+    if book_data.isbn:
+        db_book.isbn = book_data.isbn
+    if book_data.book_format:
+        db_book.book_format = book_data.book_format
+    if book_data.edition:
+        db_book.edition = book_data.edition
+    if book_data.pages:
+        db_book.pages = book_data.pages
+    if book_data.publisher:
+        db_book.publisher = book_data.publisher
+    if book_data.price:
+        db_book.price = book_data.price
+
+    # Update authors if provided
+    if book_data.authors is not None:
+        # Delete existing authors and add new ones
+        db.query(models.Author).filter(models.Author.book_id == book_id).delete()
+        for author_data in book_data.authors:
+            db_author = models.Author(
+                name=author_data.name,
+                role=author_data.role,
+                book_id=book_id
+            )
+            db.add(db_author)
+
+    # Update genres if provided
+    if book_data.genres is not None:
+        # Delete existing genres and add new ones
+        db.query(models.Genre).filter(models.Genre.book_id == book_id).delete()
+        for genre_data in book_data.genres:
+            db_genre = models.Genre(
+                genre=genre_data.genre,
+                book_id=book_id
+            )
+            db.add(db_genre)
+
+    # Commit the changes
+    db.commit()
+    db.refresh(db_book)
+
+    return db_book
 
 
+#DELETE
+def delete_book(db: Session, book_id: str, current_user: User):
+    # Ensure the current user is an admin
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Permission denied")
 
+    # Find the book by book_id
+    db_book = db.query(models.Book).filter(models.Book.book_id == book_id).first()
+
+    if not db_book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    # Delete associated authors, genres, characters, and awards
+    db.query(models.Author).filter(models.Author.book_id == book_id).delete()
+    db.query(models.Genre).filter(models.Genre.book_id == book_id).delete()
+    db.query(models.Characters).filter(models.Characters.book_id == book_id).delete()
+    db.query(models.Awards).filter(models.Awards.book_id == book_id).delete()
+
+    # Finally, delete the book itself
+    db.delete(db_book)
+    db.commit()
+
+    return {"detail": "Book deleted successfully"}
 
 
 
