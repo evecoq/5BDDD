@@ -5,6 +5,8 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+#---------------------------------USERS---------------------------------------
+
 class User(Base):
     __tablename__ = 'users'
 
@@ -18,10 +20,16 @@ class User(Base):
     # One-to-Many relationship: a user can borrow many books
     borrows = relationship('Borrow', back_populates='user')
 
+
+
+#---------------------------------BOOKS------------------------------------
+
 class Book(Base):
     __tablename__ = 'books'
 
-    book_id = Column(Integer, Identity(start=100000), primary_key=True)
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)  # Primary key
+    book_id = Column(String(255), nullable=False, unique=True)
     title = Column(String(1000))
     series = Column(String(1000))
     description = Column(String(4000))
@@ -43,12 +51,74 @@ class Book(Base):
     awards = relationship("Awards", back_populates="book")
     authors = relationship("Author", back_populates="book")
 
+
+#NEW
+class Genre(Base):
+    __tablename__ = 'genre'
+
+    id = Column(Integer, Identity(start=1), primary_key=True)
+    genre = Column(String(200))
+
+    # Foreign key relationship based on book_id, not the primary key id
+    book_id = Column(String(255), ForeignKey('books.book_id'), nullable=False)
+
+    # Relationship back to the book
+    book = relationship("Book", back_populates="genres")
+
+
+
+#NEW
+class Characters(Base):
+    __tablename__ = 'characters'
+
+    id = Column(Integer, Identity(start=1), primary_key=True)
+    character = Column(String(200))
+
+    # Foreign key relationship based on book_id, not the primary key id
+    book_id = Column(String(255), ForeignKey('books.book_id'), nullable=False)
+
+    # Relationship back to the book
+    book = relationship("Book", back_populates="characters")
+
+
+
+#NEW
+class Awards(Base):
+    __tablename__ = 'awards'
+
+    id = Column(Integer, Identity(start=1), primary_key=True)
+    award = Column(String(500))
+
+    # Foreign key relationship based on book_id, not the primary key id
+    book_id = Column(String(255), ForeignKey('books.book_id'), nullable=False)
+
+    # Relationship back to the book
+    book = relationship("Book", back_populates="awards")
+
+
+#NEW
+class Author(Base):
+    __tablename__ = 'author'
+
+    id = Column(Integer, Identity(start=1), primary_key=True) 
+    name = Column(String(500))
+    role = Column(String(100))
+
+    # Foreign key relationship based on book_id, not the primary key id
+    book_id = Column(String(255), ForeignKey('books.book_id'), nullable=False)
+
+    # Relationship back to the book
+    book = relationship("Book", back_populates="authors")
+
+
+#------------------------------------BORROWS---------------------------------
+
 class Borrow(Base):
     __tablename__ = 'borrows'
 
     borrow_id = Column(Integer, Identity(start=1), primary_key=True)
     user_id = Column(Integer, ForeignKey('users.user_id'))
-    book_id = Column(Integer, ForeignKey('books.book_id'))
+    book_id = Column(String(255), ForeignKey('books.book_id'))
     borrow_date = Column(Date)
     return_date = Column(Date)
     return_deadline = Column(Date)
@@ -56,46 +126,3 @@ class Borrow(Base):
     # Many-to-One relationships
     user = relationship('User', back_populates='borrows')
     book = relationship('Book', back_populates='borrows')
-
-class Genre(Base):
-    __tablename__ = 'genre'
-
-    id = Column(Integer, Identity(start=1), primary_key=True)
-    book_id = Column(Integer, ForeignKey('books.book_id'), nullable=False)
-    genre = Column(String(200))
-
-    # Relationship with Book
-    book = relationship("Book", back_populates="genres")
-
-
-class Characters(Base):
-    __tablename__ = 'characters'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    book_id = Column(Integer, ForeignKey('books.book_id'), nullable=False)
-    character = Column(String(200))
-
-    # Relationship with Book
-    book = relationship("Book", back_populates="characters")
-
-
-class Awards(Base):
-    __tablename__ = 'awards'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    book_id = Column(Integer, ForeignKey('books.book_id'), nullable=False)
-    name = Column(String(500))
-
-    # Relationship with Book
-    book = relationship("Book", back_populates="awards")
-
-class Author(Base):
-    __tablename__ = 'author'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    book_id = Column(Integer, ForeignKey('books.book_id'), nullable=False)
-    name = Column(String(200))
-    role = Column(String(200))
-
-    # Relationship with Book
-    book = relationship("Book", back_populates="authors")

@@ -9,6 +9,7 @@ from typing import Optional
 from fastapi import Depends, HTTPException, status
 
 
+#----------------------USERS-----------------------
 
 def create_user(db: Session, user: UtilisateurCreate):
     hashed_pw = hash_password(user.password)
@@ -23,6 +24,7 @@ def create_user(db: Session, user: UtilisateurCreate):
     db.refresh(db_user)
     return db_user
 
+
 def authenticate_user(db: Session, email: str, password: str):
     user = get_user_by_email(db, email)
     if not user:
@@ -31,10 +33,14 @@ def authenticate_user(db: Session, email: str, password: str):
         return False
     return user
 
+
 def get_user_by_email(db:Session, email: str):
     return db.query(User).filter(User.email == email).first()
 
 
+#----------------------------------BOOKS------------------------------
+
+#Search a book by name or by author
 def search_books_and_authors(db: Session, name: str = None, title: str = None):
     books = []
     authors = []
@@ -63,6 +69,57 @@ def search_books_and_authors(db: Session, name: str = None, title: str = None):
     }
 
 
+
+
+
+#NEW
+def create_book_with_author_and_genre(db: Session, book_data: schemas.BookCreate):
+    # Créer le livre avec un book_id manuel, mais ne pas explicitement définir l'id
+    db_book = models.Book(
+        book_id=book_data.book_id,  # Utilisation du book_id fourni manuellement
+        title=book_data.title,
+        series=book_data.series,
+        description=book_data.description,
+        language=book_data.language,
+        isbn=book_data.isbn,
+        book_format=book_data.book_format,
+        edition=book_data.edition,
+        pages=book_data.pages,
+        publisher=book_data.publisher,
+        price=book_data.price
+    )
+    db.add(db_book)
+    db.commit()
+    db.refresh(db_book)  # Cela renvoie les données mises à jour, y compris l'ID auto-généré
+
+    # Créer les auteurs et genres en utilisant le book_id généré
+    for author_data in book_data.authors:
+        db_author = models.Author(
+            name=author_data.name,
+            role=author_data.role,
+            book_id=db_book.book_id  # Utiliser le book_id manuellement fourni
+        )
+        db.add(db_author)
+
+    for genre_data in book_data.genres:
+        db_genre = models.Genre(
+            genre=genre_data.genre,
+            book_id=db_book.book_id  # Utiliser le book_id manuellement fourni
+        )
+        db.add(db_genre)
+
+    db.commit()  # Valider les transactions pour les auteurs et genres
+    return db_book
+
+
+
+
+
+
+
+
+#-----------------------------BORROWS-----------------------------
+
 def create_borrow(db: Session, borrow: schemas.BorrowCreate, user_id: int):
     # Vérifier si le livre est déjà emprunté et non retourné
     existing_borrow = db.query(models.Borrow).filter(
@@ -73,7 +130,7 @@ def create_borrow(db: Session, borrow: schemas.BorrowCreate, user_id: int):
     if existing_borrow:
         raise HTTPException(status_code=400, detail="Le livre est déjà emprunté et n'a pas été retourné.")
 
-    # Si le livre est disponible, créer un nouvel emprunt
+    # Check if book is available, borrow it if it is
     db_borrow = models.Borrow(
         user_id=user_id,
         book_id=borrow.book_id,
@@ -85,7 +142,7 @@ def create_borrow(db: Session, borrow: schemas.BorrowCreate, user_id: int):
     db.commit()
     db.refresh(db_borrow)
 
-    # Incrémenter le nombre de livres empruntés par l'utilisateur
+    # Number of borrowed books by user
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     user.books_borrowed = (user.books_borrowed or 0) + 1
     db.commit()
@@ -124,33 +181,4 @@ def close_borrow(db: Session, book_id: int, user_id: int):
 def get_user_borrows(db: Session, user_id: int):
     return db.query(models.Borrow).filter(models.Borrow.user_id == user_id).all()
 
-
-# Ajouter un livre
-
-def create_book(db: Session, book: schemas.BookCreate):
-    db_book = models.Book(**book.dict())  # Create the book from schema
-    db.add(db_book)
-    db.commit()
-    db.refresh(db_book)
-    return db_book
-
-
-def update_book(db: Session, book_id: int, book: schemas.BookCreate):
-    db_book = db.query(models.Book).filter(models.Book.book_id == book_id).first()
-    if db_book is None:
-        return None
-    for key, value in book.dict().items():
-        setattr(db_book, key, value)
-    db.commit()
-    db.refresh(db_book)
-    return db_book
-
-
-def delete_book(db: Session, book_id: int):
-    db_book = db.query(models.Book).filter(models.Book.book_id == book_id).first()
-    if db_book is None:
-        return None
-    db.delete(db_book)
-    db.commit()
-    return db_book
 

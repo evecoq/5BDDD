@@ -10,13 +10,11 @@ import models
 from auth import ALGORITHM, SECRET_KEY, create_access_token
 from jose import JWTError, jwt
 from pydantic import BaseModel
-
-
-
-
 import crud, schemas
 
+
 Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI()
 
@@ -33,6 +31,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 class TokenData(BaseModel):
     email: Optional[str] = None
     is_admin: Optional[bool] = False
+
+
+#----------------------------USERS--------------------------------
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
@@ -59,6 +60,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 def protected_route(current_user: User = Depends(get_current_user)):
     return {"message": f"Bonjour {current_user.name}, vous êtes authentifié."}
 
+
 # Authentification via token
 @app.post("/token")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -68,8 +70,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     access_token = create_access_token(data={"sub": user.email, "is_admin": user.is_admin})
     return {"access_token": access_token, "token_type": "bearer"}        
 
-# Endpoint Utilisateur
-# Créer un utilisateur
+
+# Create user
 @app.post("/utilisateurs/", response_model=schemas.Utilisateur)
 def create_utilisateur(user: schemas.UtilisateurCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, email=user.email)
@@ -77,12 +79,14 @@ def create_utilisateur(user: schemas.UtilisateurCreate, db: Session = Depends(ge
         raise HTTPException(status_code=400, detail="Email déjà enregistré")
     return crud.create_user(db=db, user=user)
 
-# Endpoint pour Livre
-# Recherche de livre
+
+#------------------------BOOKS------------------------------
+
+# Search a book
 @app.get("/search/", response_model=dict)
 def search(
-    name: str = Query(None, min_length=2),  # Paramètre pour le nom de l'auteur
-    title: str = Query(None, min_length=2),  # Paramètre pour le titre du livre
+    name: str = Query(None, min_length=2),  # Author's name parameter
+    title: str = Query(None, min_length=2),  # Title paramether
     db: Session = Depends(get_db)
 ):
     # Appel de la fonction de recherche dans le CRUD avec les deux paramètres
@@ -96,6 +100,23 @@ def search(
         "books": books,
         "authors": authors
     }
+
+
+
+#NEW
+@app.post("/books/", response_model=schemas.Book)
+def create_book(
+    book: schemas.BookCreate, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(get_current_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Access forbidden: Admins only")
+    
+    return crud.create_book_with_author_and_genre(db=db, book_data=book)
+
+
+#-----------------------------------BORROWS---------------------------------
 
 @app.post("/borrows/", response_model=schemas.BorrowCreate)
 def create_borrow(borrow: schemas.BorrowCreate,  db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
@@ -127,22 +148,3 @@ def get_borrows(db: Session = Depends(get_db), current_user: schemas.Utilisateur
     return borrows
 
 
-@app.post("/books/", response_model=schemas.Book)
-def add_book(book: schemas.BookCreate, db: Session = Depends(get_db)):
-    return crud.create_book(db=db, book=book)
-
-"""
-@app.put("/books/{book_id}")
-def modify_book(book_id: int, book: BookCreate, db: Session = Depends(get_db)):
-    updated_book = update_book(db, book_id, book)
-    if updated_book is None:
-        raise HTTPException(status_code=404, detail="Book not found")
-    return updated_book
-
-@app.delete("/books/{book_id}")
-def remove_book(book_id: int, db: Session = Depends(get_db)):
-    deleted_book = delete_book(db, book_id)
-    if deleted_book is None:
-        raise HTTPException(status_code=404, detail="Book not found")
-    return {"message": "Book deleted successfully"}
-"""
