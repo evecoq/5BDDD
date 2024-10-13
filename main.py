@@ -81,20 +81,18 @@ def create_utilisateur(user: schemas.UtilisateurCreate, db: Session = Depends(ge
 
 
 #------------------------BOOKS------------------------------
-
 # Search a book
 @app.get("/search/", response_model=dict)
 def search(
-    name: str = Query(None, min_length=2),  # Author's name parameter
-    title: str = Query(None, min_length=2),  # Title paramether
+    name: str = Query(None, min_length=2),
+    title: str = Query(None, min_length=2),
     db: Session = Depends(get_db)
 ):
-    # Appel de la fonction de recherche dans le CRUD avec les deux paramètres
     result = crud.search_books_and_authors(db=db, name=name, title=title)
 
-    # Convertir les objets SQLAlchemy en schémas Pydantic
-    books = [schemas.Book.from_orm(book) for book in result["books"]]
-    authors = [schemas.Author.from_orm(author) for author in result["authors"]]
+    # Convert to output schemas
+    books = [schemas.BookOut.model_validate(book) for book in result["books"]]
+    authors = [schemas.AuthorOut.model_validate(author) for author in result["authors"]]
 
     return {
         "books": books,
@@ -156,6 +154,19 @@ def close_borrow(book_id: int, db: Session = Depends(get_db), current_user: sche
 @app.get("/users/borrows", response_model=List[schemas.BorrowDetail])
 def get_borrows(db: Session = Depends(get_db), current_user: schemas.Utilisateur = Depends(get_current_user)):
     borrows = crud.get_user_borrows(db=db, user_id=current_user.user_id)
+    return borrows
+
+@app.get("/admin/users/{user_id}/borrows", response_model=List[schemas.BorrowDetail])
+def get_user_borrows_for_admin(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)  # Check if the current user is an admin
+):
+    # You may want to check if the current_user has admin privileges
+    if not current_user.is_admin:  # Adjust this according to your user model
+        raise HTTPException(status_code=403, detail="Access forbidden: Admins only.")
+
+    borrows = crud.get_user_borrows(db=db, user_id=user_id)
     return borrows
 
 

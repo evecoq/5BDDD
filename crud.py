@@ -68,6 +68,7 @@ def search_books_and_authors(db: Session, name: str = None, title: str = None):
         "authors": authors
     }
 
+
 #CREATE
 def create_book_with_author_and_genre(db: Session, book_data: schemas.BookCreate):
     # Créer le livre avec un book_id manuel, mais ne pas explicitement définir l'id

@@ -52,7 +52,8 @@ class Author(AuthorBase):
     book_id: str
 
     class Config:
-        from_attributes = True  # Indique à Pydantic d'utiliser les objets SQLAlchemy comme source de données
+        from_attributes = True
+
 
 class Book(BookBase):
     book_id: str
@@ -77,13 +78,14 @@ class BookBase(BaseModel):
     price: Optional[float] = None
 
 
+
 # Schéma de base pour les auteurs
 class AuthorBase(BaseModel):
     name: str
     role: Optional[str] = None
 
 
-# Schéma de création pour les auteurs (sans `book_id`, car il sera ajouté après)
+# Schéma de création pour les auteurs
 class AuthorCreate(AuthorBase):
     pass
 
@@ -131,6 +133,51 @@ class BookUpdate(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class BookOut(BookBase):  # Inherit from BookBase
+    authors: List[AuthorCreate]  
+    genres: List[GenreCreate]  
+
+    class Config:
+        from_attributes = True
+
+
+# Author Output Schema
+class AuthorOut(BaseModel):
+    id: int
+    name: str
+    role: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+# Genre Output Schema
+class GenreOut(BaseModel):
+    id: int
+    genre: str
+
+    class Config:
+        from_attributes = True
+
+class BookOut(BaseModel):
+    book_id: str
+    title: str
+    series: Optional[str] = None
+    description: Optional[str] = None
+    language: Optional[str] = None
+    isbn: Optional[str] = None
+    book_format: Optional[str] = None
+    edition: Optional[str] = None
+    pages: Optional[int] = None
+    publisher: Optional[str] = None
+    price: Optional[float] = None
+    authors: List[AuthorOut] = []  # Use the output schema for authors
+    genres: List[GenreOut] = []    # Use the output schema for genres
+
+    class Config:
+        from_attributes = True
+
         
 
 #---------------------------BORROWS--------------------------

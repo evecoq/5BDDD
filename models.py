@@ -51,8 +51,6 @@ class Book(Base):
     awards = relationship("Awards", back_populates="book")
     authors = relationship("Author", back_populates="book")
 
-
-#NEW
 class Genre(Base):
     __tablename__ = 'genre'
 
@@ -65,9 +63,6 @@ class Genre(Base):
     # Relationship back to the book
     book = relationship("Book", back_populates="genres")
 
-
-
-#NEW
 class Characters(Base):
     __tablename__ = 'characters'
 
@@ -81,8 +76,6 @@ class Characters(Base):
     book = relationship("Book", back_populates="characters")
 
 
-
-#NEW
 class Awards(Base):
     __tablename__ = 'awards'
 
@@ -95,8 +88,6 @@ class Awards(Base):
     # Relationship back to the book
     book = relationship("Book", back_populates="awards")
 
-
-#NEW
 class Author(Base):
     __tablename__ = 'author'
 
